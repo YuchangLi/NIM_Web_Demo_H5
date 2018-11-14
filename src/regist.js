@@ -13,6 +13,7 @@ import cookie from './utils/cookie'
 
 import config from './configs'
 import util from './utils'
+import sha1 from 'sha1'
 
 var formData = new Vue({
   el: '#form-data',
@@ -55,29 +56,35 @@ var formData = new Vue({
       let accountLowerCase = this.account.toLowerCase()
 
       let xhr = new XMLHttpRequest()
-      xhr.open('POST', `${config.postUrl}/api/createDemoUser`, true)
+      let nonce = new Date().getTime()
+      let curTime = parseInt(nonce/1000)
+      let checkSum = sha1(config.appSecret + nonce +  curTime)
+      xhr.open('POST', `${config.postUrl}/nimserver/user/create.action`, true)
       xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded')
-      xhr.setRequestHeader('appkey', config.appkey)
+      xhr.setRequestHeader('Appkey', config.appkey)
+      xhr.setRequestHeader('Nonce', nonce)
+      xhr.setRequestHeader('CurTime', curTime)
+      xhr.setRequestHeader('CheckSum', checkSum)
       xhr.send(util.object2query({
-        username: accountLowerCase,
-        password: sdktoken,
-        nickname: this.nickname
+        accid: accountLowerCase,
+        token: sdktoken,
+        name: this.nickname
       }))
       xhr.onreadystatechange = () => {
         if (xhr.readyState == 4) {
           if (xhr.status == 200) {
             let data = JSON.parse(xhr.responseText)
-            if (data.res === 200) {
+            if (data.code === 200) {
               cookie.setCookie('uid', accountLowerCase)
               cookie.setCookie('sdktoken', sdktoken)
               location.href = config.homeUrl
-            } else if (data.res === 414) {
-              this.errorMsg = data.errmsg
+            } else if (data.code === 414) {
+              this.errorMsg = data.desc
             } else {
-              this.errorMsg = data.errmsg
+              this.errorMsg = data.desc
             }
           } else {
-            this.errorMsg = '网络断开或其他未知错误'
+            this.desc = '网络断开或其他未知错误'
           }
           this.$forceUpdate()
         }

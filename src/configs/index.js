@@ -34,7 +34,9 @@ let appConfig = {
   },
   online: {
     appkey: 'fb7856edb703927dcb1445115f754762',
-    postUrl: 'https://app.netease.im'
+    appSecret: '4c8f07abe0df',
+    // postUrl: 'https://app.netease.im'
+    postUrl: 'https://api.netease.im'
   }
 }
 
